@@ -9,61 +9,104 @@ function init(){
         // Use D3 to select the dropdown menu
         let dropdownMenu = d3.select("#selDataset");
 
+        // getting all names from json
         let names = alldata.names;
-        console.log(names);
 
-        // Add  samples to dropdown menu
+        // getting dropdown 
         names.forEach(function(id){
-            
-            dropdownMenu.append("option")
-            .text(id)
-            .property("value",id);
+            dropdownMenu.append("option").text(id).property("value",id);
         });
         
-        let value = names[0];
-        barchart(value);
+        // pass first subject and calling barchart function
+        barchart(names[0]);
+        bubblechart(names[0]);
     });
 };
-init();
+
+// function when the subject id changes
+function optionChanged(passedvalue) {
+    barchart(passedvalue);
+    bubblechart(passedvalue);
+};
 
 function barchart(passedvalue){
 
+    // json data
     d3.json(url).then(function(alldata){
 
+        // retrieve all samples data
         let samples = alldata.samples;
-        console.log(samples);
-
         let id = samples.filter(take=>take.id == passedvalue);
-        
-        let subject = id[0];
 
-        let values = subject.sample_values;
-        console.log(values);
-        let labels = subject.otu_ids;
-        console.log(labels);
-        let hovertext  = subject.otu_labels;
-        console.log(hovertext);
+        // get data for chart 
+        let values = id[0].sample_values;
+        let labels = id[0].otu_ids;
+        let hovertext = id[0].otu_labels;
 
-        let x_values = values.slice(0,10);
-        console.log(x_values);
-        let y_values = labels.slice(0,10).map(id => `OTU ${id}`);
-        console.log(y_values);
-        let hovers = hovertext.slice(0,10);
-        console.log(hovers);
+        // select first 10 elements from data
+        let x_values = values.slice(0,10).reverse();
+        let y_values = labels.slice(0,10).map(id => `OTU ${id}`).reverse(); // map data to name the y-values as OTU
+        let hovers = hovertext.slice(0,10).reverse();
         
+        // data for chart
         let data = [{
-            x: x_values.reverse(),
-            y: y_values.reverse(),
             type: 'bar',
-            // mode: 'markers',
-            // marker: {size:15},
-            text: hovers.reverse(),
+            x: x_values,
+            y: y_values,
+            text: hovers,
             orientation: 'h'
         }];
     
+        // layout for chart
         let layout = {
-            title: 'Top 10 OTUs'
+            title: 'Bar Chart',
+            height: 500,
+            width: 400            
         };
+
+        // display bar chart
         Plotly.newPlot('bar', data, layout);
     });
 };
+
+function bubblechart(passedvalue){
+
+    // json data
+    d3.json(url).then(function(alldata){
+
+        // retrieve all samples data
+        let samples = alldata.samples;
+        let id = samples.filter(take=>take.id == passedvalue);
+
+        // get data for chart
+        let x_values = id[0].otu_ids; 
+        let y_values = id[0].sample_values;
+        let m_size = id[0].sample_values;
+        let m_color = id[0].otu_ids;
+        let text = id[0].otu_labels;
+
+        let data = [{
+            x: x_values,
+            y: y_values,
+            text: text,
+            mode: 'markers',
+            marker:{
+                color: m_color,
+                colorscale: 'Earth',
+                size: m_size
+            }
+        }];
+
+        let layout = {
+            title: 'Bubble Chart'
+        };
+
+        // display bubble chart
+        Plotly.newPlot('bubble', data, layout);
+    });
+};
+
+init();
+
+//REFERENCES:
+// colorscale for bubble chart: https://plotly.com/javascript/colorscales/
