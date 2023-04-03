@@ -1,85 +1,69 @@
 // store URL in variable
 const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json";
- // fetch the json data and console log it
- d3.json(url).then(function(data){
-    console.log(data);
 
-    let otuID = Object.values(data.samples[0]);
-    
-    let labels = [];
-    let values = [];
+function init(){ 
 
-    for (let i=0; i<10; i++){
+    // fetch the json data and console log it
+    d3.json(url).then(function(alldata){
 
-        labels.push(otuID[1][i]);
+        // Use D3 to select the dropdown menu
+        let dropdownMenu = d3.select("#selDataset");
+
+        let names = alldata.names;
+        console.log(names);
+
+        // Add  samples to dropdown menu
+        names.forEach(function(id){
+            
+            dropdownMenu.append("option")
+            .text(id)
+            .property("value",id);
+        });
         
-        values.push(otuID[0][i]);
-        
-    };
-    console.log(labels);
-    console.log(values);
-});
-
-
-
-function init(){   
-
-    let data = [{
-        values: values,
-        labels: labels,
-        type: 'bar',
-        mode: 'markers',
-        marker: {size:15},
-        text: hovers
-    }];
-
-    let layout = {
-        height: 600,
-        widht: 800
-    };
-
-    Plotly.newPlot('bar', data, layout);
+        let value = names[0];
+        barchart(value);
+    });
 };
-
-// On change to the DOM, call getData()
-d3.selectAll("#selDataset").on("change", barchart);
-
-function barchart (){
-      
-    // Use D3 to select the dropdown menu
-    let dropdownMenu = d3.select("#selDataset");
-    // Assign the value of the dropdown menu option to a variable
-    let dataset = dropdownMenu.property("value");
-
-    let labels = [];
-    let values = [];
-    let hovers = [];
-    let data = [];
-    
-    let otuID = Object.values(data.samples[0]);
-    let allIDs = otuID[1];
-
-    
-    
-
-    if(dataset === '1167'){
-        data = labels[0];
-
-    }
-    else if (dataset == 2859){
-        data = labels[1];
-    }
-    else if (dataset === 482){
-        data = labels[2];
-    }
-    else if (dataset == '2264'){
-        data = labels[3];
-    }
-
-    Plotly.restyle("bar", 'values', [data]);
-    
-};
-
-
 init();
 
+function barchart(passedvalue){
+
+    d3.json(url).then(function(alldata){
+
+        let samples = alldata.samples;
+        console.log(samples);
+
+        let id = samples.filter(take=>take.id == passedvalue);
+        
+        let subject = id[0];
+
+        let values = subject.sample_values;
+        console.log(values);
+        let labels = subject.otu_ids;
+        console.log(labels);
+        let hovertext  = subject.otu_labels;
+        console.log(hovertext);
+
+        let x_values = values.slice(0,10);
+        console.log(x_values);
+        let y_values = labels.slice(0,10).map(id => `OTU ${id}`);
+        console.log(y_values);
+        let hovers = hovertext.slice(0,10);
+        console.log(hovers);
+        
+        let data = [{
+            x: x_values.reverse(),
+            y: y_values.reverse(),
+            type: 'bar',
+            // mode: 'markers',
+            // marker: {size:15},
+            text: hovers.reverse(),
+            orientation: 'h'
+        }];
+    
+        let layout = {
+            title: 'Top 10 OTUs'
+        };
+        Plotly.newPlot('bar', data, layout);
+    });
+};
