@@ -115,13 +115,11 @@ function metadata(passedvalue){
 
         // using array method to iterate through the values
         Object.entries(id[0]).forEach(([key, value]) => {
-
+            
             // display information in demographic info chart/table
             sample_metadata.append("h5").text(`${key}: ${value}`);
         });
-
     });
-
 };
 init();
 
