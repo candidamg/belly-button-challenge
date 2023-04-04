@@ -14,99 +14,118 @@ function init(){
 
         // getting dropdown 
         names.forEach(function(id){
-            dropdownMenu.append("option").text(id).property("value",id);
+            dropdownMenu.append("option").text(id).property("value");
         });
-        
-        // pass first subject and calling barchart function
-        barchart(names[0]);
-        bubblechart(names[0]);
+       
+        // pass first subject and call the functions
+        chartvalues(names[0]);
+        metadata(names[0]);
     });
 };
-
 // function when the subject id changes
 function optionChanged(passedvalue) {
-    barchart(passedvalue);
-    bubblechart(passedvalue);
-};
 
-function barchart(passedvalue){
+    chartvalues(passedvalue);
+    metadata(passedvalue);
+};
+// function to 
+function chartvalues(passedvalue){
 
     // json data
     d3.json(url).then(function(alldata){
 
         // retrieve all samples data
         let samples = alldata.samples;
+
+        // filter for each option/subject selected
         let id = samples.filter(take=>take.id == passedvalue);
 
-        // get data for chart 
-        let values = id[0].sample_values;
-        let labels = id[0].otu_ids;
-        let hovertext = id[0].otu_labels;
+        // get data for all charts
+        let sample_values = id[0].sample_values; 
+        let otu_ids = id[0].otu_ids; 
+        let otu_labels = id[0].otu_labels; 
 
-        // select first 10 elements from data
-        let x_values = values.slice(0,10).reverse();
-        let y_values = labels.slice(0,10).map(id => `OTU ${id}`).reverse(); // map data to name the y-values as OTU
-        let hovers = hovertext.slice(0,10).reverse();
-        
-        // data for chart
-        let data = [{
+        // call function
+        charts(sample_values, otu_ids, otu_labels);
+
+    });
+};
+// function that displays the bar and bubble charts
+function charts(sample_values, otu_ids, otu_labels){
+
+    // json data
+    d3.json(url).then(function(alldata){
+                
+        // data for bar chart
+        let bar_data = [{
             type: 'bar',
-            x: x_values,
-            y: y_values,
-            text: hovers,
+            x: sample_values.slice(0,10).reverse(),
+            y: otu_ids.slice(0,10).map(id => `OTU ${id}`).reverse(),
+            text: otu_labels,
             orientation: 'h'
         }];
+
+        // data for bubble chart
+        let bubble_data = [{
+            x: otu_ids,
+            y: sample_values,
+            text: otu_labels,
+            mode: 'markers',
+            marker:{
+                color: otu_ids,
+                colorscale: 'Earth',
+                size: sample_values
+            }
+        }];
     
-        // layout for chart
-        let layout = {
+        // layout for bar chart
+        let bar_layout = {
             title: 'Bar Chart',
             height: 500,
             width: 400            
+        };    
+
+        // layout for bubble chart
+        let bubble_layout = {
+            title: 'Bubble Chart',
+            height: 550,
+            width: 1000 
         };
 
         // display bar chart
-        Plotly.newPlot('bar', data, layout);
+        Plotly.newPlot('bar', bar_data, bar_layout);
+
+        // display bubble chart
+        Plotly.newPlot('bubble', bubble_data, bubble_layout);
+
     });
 };
-
-function bubblechart(passedvalue){
+function metadata(passedvalue){
 
     // json data
     d3.json(url).then(function(alldata){
 
         // retrieve all samples data
-        let samples = alldata.samples;
+        let samples = alldata.metadata;
+
+        // filter data from metadata
         let id = samples.filter(take=>take.id == passedvalue);
 
-        // get data for chart
-        let x_values = id[0].otu_ids; 
-        let y_values = id[0].sample_values;
-        let m_size = id[0].sample_values;
-        let m_color = id[0].otu_ids;
-        let text = id[0].otu_labels;
+        let sample_metadata = d3.select('#sample-metadata').html('');
 
-        let data = [{
-            x: x_values,
-            y: y_values,
-            text: text,
-            mode: 'markers',
-            marker:{
-                color: m_color,
-                colorscale: 'Earth',
-                size: m_size
-            }
-        }];
+        // using array method to iterate through the values
+        Object.entries(id[0]).forEach(([key, value]) => {
 
-        let layout = {
-            title: 'Bubble Chart'
-        };
+            // display information in demographic info chart/table
+            sample_metadata.append("h5").text(`${key}: ${value}`);
+        });
 
-        // display bubble chart
-        Plotly.newPlot('bubble', data, layout);
     });
-};
 
+};
 init();
 
 //REFERENCES:
+//bubble chart: https://plotly.com/javascript/bubble-charts/
 // colorscale for bubble chart: https://plotly.com/javascript/colorscales/
+// Iterating through an object: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries#iterating_through_an_object:~:text=Iterating%20through%20an%20Object
