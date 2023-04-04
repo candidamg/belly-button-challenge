@@ -122,8 +122,3 @@ function metadata(passedvalue){
     });
 };
 init();
-
-//REFERENCES:
-//bubble chart: https://plotly.com/javascript/bubble-charts/
-// colorscale for bubble chart: https://plotly.com/javascript/colorscales/
-// Iterating through an object: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries#iterating_through_an_object:~:text=Iterating%20through%20an%20Object
